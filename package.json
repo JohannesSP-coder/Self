@@ -7,6 +7,7 @@
   "scripts": {
     "dev:server": "pnpm --filter meglio-server dev",
     "dev:web": "pnpm --filter meglio-web dev",
+    "dev:mobile": "pnpm --filter meglio-mobile start",
     "build:server": "pnpm --filter meglio-server build",
     "build:web": "pnpm --filter meglio-web build"
   }

@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Meglio",
+    "slug": "meglio",
+    "scheme": "meglio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0A0A",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.meglio.app"
+    },
+    "android": {
+      "package": "com.meglio.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0A0A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Meglio braucht Zugriff auf deine Fotos, um ein Beweisfoto oder Profilbild auszuwählen.",
+          "cameraPermission": "Meglio braucht Zugriff auf deine Kamera, um ein Beweisfoto oder Profilbild aufzunehmen."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-foreground.png",
+          "color": "#D12A24"
+        }
+      ]
+    ]
+  }
+}

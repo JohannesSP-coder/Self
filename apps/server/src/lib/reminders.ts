@@ -1,10 +1,11 @@
 /**
  * Picks one short, present-tense nudge for an unfinished habit — never more than one at a time.
  *
- * This file is intentionally duplicated (apps/server/src/lib/reminders.ts and
- * apps/web/src/reminders.ts, byte-for-byte identical): the server uses it to decide when to send
- * a push notification, the web app uses the exact same logic to show an in-app banner (which also
- * works in the claude.ai demo, where real push isn't available). Keep both copies in sync.
+ * This file is intentionally duplicated (apps/server/src/lib/reminders.ts, apps/web/src/reminders.ts
+ * and apps/mobile/src/reminders.ts, byte-for-byte identical): the server uses it to decide when to
+ * send a push notification, the web app and the native app use the exact same logic to show an
+ * in-app banner (the web one also works in the claude.ai demo, where real push isn't available).
+ * Keep all three copies in sync.
  *
  * Times are evaluated in Europe/Berlin regardless of the server host's or the viewer's own time
  * zone, so the server (deciding whether to push) and the client (deciding whether to show the

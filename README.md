@@ -9,6 +9,7 @@ Sucht-Tracker mit App-Blocker-Einstellungen und ein KI-Life-Coach auf Basis von 
 | --- | --- |
 | `apps/server` | API: Express + TypeScript, Prisma (SQLite in der Entwicklung), JWT-Login, Claude-Coach |
 | `apps/web` | Website: React + Vite + TypeScript, Design aus dem Mockup (Schwarz/Rot) |
+| `apps/mobile` | Native App: Expo + Expo Router + TypeScript, dieselbe API wie die Website |
 
 ## Lokal starten
 
@@ -46,6 +47,25 @@ npx web-push generate-vapid-keys
 
 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` und `VAPID_CONTACT_EMAIL` setzen, Server neu starten. Danach
 lässt sich der Schalter "Erinnerungen" auf `/profil` aktivieren.
+
+## Native App (apps/mobile)
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env   # EXPO_PUBLIC_API_URL ggf. auf die LAN-IP deines Rechners setzen
+pnpm dev:mobile
+```
+
+Dann im Terminal `w` für die Web-Vorschau drücken, oder die Expo-Go-App auf dem Handy den QR-Code
+scannen lassen (dafür braucht `EXPO_PUBLIC_API_URL` die LAN-IP des Rechners, nicht `localhost`).
+Kamera, Foto-Bibliothek und Profilbild funktionieren in Expo Go direkt. Für echte Push-Benachrichtigungen
+braucht es zusätzlich ein EAS-Projekt (`npx eas-cli init`) und einen Development Build
+(`npx expo run:ios` / `npx expo run:android`), da Expo Go seit SDK 53 keinen Remote-Push mehr unterstützt.
+
+Die App deckt dieselben Funktionen wie die Website ab (Onboarding, Bereiche, Beweisfotos per Kamera
+oder Galerie, Journal, Sucht-Tracker, App-Blocker-Einstellungen, Coach, Profilbild, Erinnerungen).
+Genau wie bei der Website ist der App-Blocker nur die Konfigurationsoberfläche: echtes Sperren von
+Apps auf dem Gerät bräuchte zusätzlich die iOS Screen-Time-/Family-Controls-Berechtigung bzw. einen
+Android Accessibility Service – ein eigenes, deutlich größeres natives Projekt mit Store-Freigabe.
 
 ## Funktionen der Website
 
