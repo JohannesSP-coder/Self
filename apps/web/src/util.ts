@@ -19,6 +19,15 @@ export function formatEntryDate(iso: string): string {
   return `${day}, ${time}`;
 }
 
+/** "Heute" / "Gestern" / "24.9." for a proof photo's day. */
+export function formatProofDay(iso: string): string {
+  const date = new Date(iso);
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+  if (diffDays === 0) return "Heute";
+  if (diffDays === 1) return "Gestern";
+  return `${date.getDate()}.${date.getMonth() + 1}.`;
+}
+
 export function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "short" });
 }

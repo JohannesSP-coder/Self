@@ -1,12 +1,17 @@
 import { prisma } from "../db.js";
-import { computeStreak, todayKey } from "./dates.js";
+import { computeStreak, lastDayKeys, todayKey } from "./dates.js";
 
 /** Builds a compact text summary of the user's current state for the coach system prompt. */
 export async function buildUserContextSummary(userId: string): Promise<string> {
   const [segments, urgeTrackers, recentJournal] = await Promise.all([
     prisma.segment.findMany({
       where: { userId },
-      include: { habits: { where: { archived: false }, include: { logs: true } } },
+      include: {
+        habits: {
+          where: { archived: false },
+          include: { logs: true, proofs: { select: { date: true }, where: { date: { in: lastDayKeys(7) } } } },
+        },
+      },
     }),
     prisma.urgeTracker.findMany({
       where: { userId },
@@ -43,7 +48,7 @@ export async function buildUserContextSummary(userId: string): Promise<string> {
         const streak = computeStreak(completedDates);
         const doneToday = completedDates.includes(today);
         lines.push(
-          `  - "${habit.title}" | Streak: ${streak} Tage | heute erledigt: ${doneToday ? "ja" : "nein"} | Ziel: ${habit.targetPerWeek}x/Woche`,
+          `  - "${habit.title}" | Streak: ${streak} Tage | heute erledigt: ${doneToday ? "ja" : "nein"} | Ziel: ${habit.targetPerWeek}x/Woche | Beweisfotos (7 Tage): ${habit.proofs.length}`,
         );
       }
     }

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, errorMessage, type Segment } from "../api";
+import { ApiError, api, errorMessage, type Proof, type Segment } from "../api";
 import { ConfirmBox } from "../components/ConfirmBox";
+import { ProofStrip, ProofViewer } from "../components/ProofPhotos";
+import { compressPhoto } from "../images";
+import { forgetProof } from "../proofImages";
 import { ArrowLeftIcon, CheckIcon, FlameIcon, SegmentIcon, TrashIcon } from "../components/Icons";
 import { isFocusSegment } from "../util";
 
@@ -28,6 +31,8 @@ export function SegmentPage() {
   // Which delete is waiting for confirmation: "segment", a habit id, or nothing.
   const [confirming, setConfirming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<{ habitTitle: string; proof: Proof } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +72,35 @@ export function SegmentPage() {
       await load();
     } catch (err) {
       setError(errorMessage(err));
+    }
+  }
+
+  async function addProof(habitId: string, file: File) {
+    setUploading(habitId);
+    setError(null);
+    try {
+      const image = await compressPhoto(file);
+      await api.addProof(habitId, image);
+      await load();
+    } catch (err) {
+      // compressPhoto throws plain Errors with viewer-facing text; API failures are ApiErrors.
+      setError(err instanceof Error && !(err instanceof ApiError) ? err.message : errorMessage(err));
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function removeProof(proofId: string) {
+    setDeleting(true);
+    try {
+      await api.deleteProof(proofId);
+      forgetProof(proofId);
+      setViewing(null);
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -159,32 +193,40 @@ export function SegmentPage() {
               onCancel={() => setConfirming(null)}
             />
           ) : (
-            <div key={habit.id} className="habit-row">
-              <button
-                type="button"
-                className={habit.doneToday ? "check done" : "check"}
-                aria-pressed={habit.doneToday}
-                aria-label={`${habit.title} heute erledigt`}
-                disabled={pending === habit.id}
-                onClick={() => toggle(habit.id)}
-              >
-                {habit.doneToday && <CheckIcon size={14} />}
-              </button>
-              <div className="grow">
-                <div className="habit-title">{habit.title}</div>
-                <div className="habit-sub">Ziel: {habit.targetPerWeek}x / Woche</div>
+            <div key={habit.id} className="habit-card">
+              <div className="habit-row">
+                <button
+                  type="button"
+                  className={habit.doneToday ? "check done" : "check"}
+                  aria-pressed={habit.doneToday}
+                  aria-label={`${habit.title} heute erledigt`}
+                  disabled={pending === habit.id}
+                  onClick={() => toggle(habit.id)}
+                >
+                  {habit.doneToday && <CheckIcon size={14} />}
+                </button>
+                <div className="grow">
+                  <div className="habit-title">{habit.title}</div>
+                  <div className="habit-sub">Ziel: {habit.targetPerWeek}x / Woche</div>
+                </div>
+                <div className={habit.streak > 0 ? "streak" : "streak muted"}>
+                  <FlameIcon /> {habit.streak}
+                </div>
+                <button
+                  type="button"
+                  className="icon-button subtle"
+                  aria-label={`${habit.title} löschen`}
+                  onClick={() => setConfirming(habit.id)}
+                >
+                  <TrashIcon size={16} />
+                </button>
               </div>
-              <div className={habit.streak > 0 ? "streak" : "streak muted"}>
-                <FlameIcon /> {habit.streak}
-              </div>
-              <button
-                type="button"
-                className="icon-button subtle"
-                aria-label={`${habit.title} löschen`}
-                onClick={() => setConfirming(habit.id)}
-              >
-                <TrashIcon size={16} />
-              </button>
+              <ProofStrip
+                habit={habit}
+                uploading={uploading === habit.id}
+                onPick={(file) => addProof(habit.id, file)}
+                onOpen={(proof) => setViewing({ habitTitle: habit.title, proof })}
+              />
             </div>
           ),
         )}
@@ -242,6 +284,16 @@ export function SegmentPage() {
             Bereich löschen
           </button>
         ))}
+
+      {viewing && (
+        <ProofViewer
+          habitTitle={viewing.habitTitle}
+          proof={viewing.proof}
+          deleting={deleting}
+          onDelete={() => removeProof(viewing.proof.id)}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </div>
   );
 }

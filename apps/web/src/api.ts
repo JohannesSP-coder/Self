@@ -7,6 +7,12 @@ export interface User {
   name: string;
 }
 
+export interface Proof {
+  id: string;
+  date: string;
+  createdAt: string;
+}
+
 export interface Habit {
   id: string;
   title: string;
@@ -15,6 +21,8 @@ export interface Habit {
   doneToday: boolean;
   streak: number;
   last7: boolean[];
+  /** Newest first, at most 12. */
+  proofs: Proof[];
 }
 
 export interface Segment {
@@ -122,6 +130,19 @@ async function request<T>(path: string, options: { method?: string; body?: unkno
   return data as T;
 }
 
+/** Loads an authenticated image and returns an object URL for it (a plain <img src> can't send the token). */
+async function requestImageUrl(path: string): Promise<string> {
+  const token = getToken();
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/api${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    throw new ApiError(0, "Server nicht erreichbar. Läuft das Backend?");
+  }
+  if (!res.ok) throw new ApiError(res.status, "Foto konnte nicht geladen werden.");
+  return URL.createObjectURL(await res.blob());
+}
+
 export function errorMessage(err: unknown): string {
   return err instanceof ApiError ? err.message : "Etwas ist schiefgelaufen. Bitte versuch es erneut.";
 }
@@ -145,6 +166,11 @@ const httpApi = {
   toggleHabit: (id: string) =>
     request<{ doneToday: boolean }>(`/habits/${id}/toggle-today`, { method: "POST" }),
   deleteHabit: (id: string) => request<void>(`/habits/${id}`, { method: "DELETE" }),
+  /** `image` is a compressed JPEG data URL; the upload also checks the habit off for today. */
+  addProof: (habitId: string, image: string) =>
+    request<{ proof: Proof; doneToday: boolean }>(`/habits/${habitId}/proofs`, { method: "POST", body: { image } }),
+  proofImage: (proofId: string) => requestImageUrl(`/proofs/${proofId}/image`),
+  deleteProof: (proofId: string) => request<void>(`/proofs/${proofId}`, { method: "DELETE" }),
 
   journal: () => request<{ entries: JournalEntry[] }>("/journal"),
   createEntry: (body: string, mood: number) =>

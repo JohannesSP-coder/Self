@@ -7,6 +7,7 @@ import {
   type BlockRule,
   type CoachMessage,
   type JournalEntry,
+  type Proof,
   type Segment,
   type Tracker,
   type User,
@@ -19,6 +20,8 @@ interface DocSnapshot {
 interface DocRef {
   get(): Promise<DocSnapshot>;
   set(data: Record<string, unknown>): Promise<void>;
+  delete(): Promise<void>;
+  collection(path: string): { doc(id: string): DocRef };
 }
 interface SampleError {
   code: string;
@@ -42,6 +45,8 @@ interface StoredHabit {
   notes: string | null;
   targetPerWeek: number;
   logs: string[];
+  /** Newest first. Missing on accounts created before proof photos existed. */
+  proofs?: Proof[];
 }
 interface StoredSegment {
   id: string;
@@ -69,6 +74,7 @@ interface DemoState {
 const DAY_MS = 86_400_000;
 const MAX_COACH_MESSAGES = 40;
 const MAX_EVENTS = 50;
+const MAX_PROOFS_PER_HABIT = 30;
 
 function newId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -192,6 +198,17 @@ async function mutate<T>(fn: (state: DemoState) => T): Promise<T> {
   return result;
 }
 
+// Each photo is its own document (a document holds at most 256 KiB); the habit keeps only its metadata.
+async function proofDoc(proofId: string): Promise<DocRef> {
+  const { doc } = await requireStore();
+  return doc.collection("proofs").doc(proofId);
+}
+
+async function deleteProofImages(ids: string[]): Promise<void> {
+  // Best effort: a leftover image is invisible to the user and only costs storage.
+  await Promise.all(ids.map(async (id) => (await proofDoc(id)).delete().catch(() => undefined)));
+}
+
 function notFound(what: string): never {
   throw new ApiError(404, `${what} nicht gefunden`);
 }
@@ -224,6 +241,7 @@ function toSegment(s: StoredSegment): Segment {
       doneToday: h.logs.includes(today),
       streak: computeStreak(h.logs),
       last7: week.map((d) => h.logs.includes(d)),
+      proofs: (h.proofs ?? []).slice(0, 12),
     })),
   };
 }
@@ -252,13 +270,14 @@ hin, sich zusätzlich professionelle Unterstützung zu suchen. Antworte auf Deut
 
 function contextSummary(state: DemoState): string {
   const today = dayKey(new Date());
+  const week = new Set(lastDayKeys(7));
   const lines = [`Name: ${state.profile.name}`];
   for (const segment of state.segments) {
     lines.push(`Bereich "${segment.name}":`);
     if (segment.habits.length === 0) lines.push("  (noch keine Habits)");
     for (const h of segment.habits) {
       lines.push(
-        `  - "${h.title}" | Streak: ${computeStreak(h.logs)} Tage | heute erledigt: ${h.logs.includes(today) ? "ja" : "nein"} | Ziel: ${h.targetPerWeek}x/Woche`,
+        `  - "${h.title}" | Streak: ${computeStreak(h.logs)} Tage | heute erledigt: ${h.logs.includes(today) ? "ja" : "nein"} | Ziel: ${h.targetPerWeek}x/Woche | Beweisfotos (7 Tage): ${(h.proofs ?? []).filter((p) => week.has(p.date)).length}`,
       );
     }
   }
@@ -343,10 +362,14 @@ export const demoApi: Api = {
       s.segments.push({ id: newId(), name: name.trim(), icon, color: "#FF5A52", habits: [] });
     }),
 
-  deleteSegment: (id) =>
-    mutate((s) => {
+  async deleteSegment(id) {
+    const removed = await mutate((s) => {
+      const segment = s.segments.find((seg) => seg.id === id);
       s.segments = s.segments.filter((seg) => seg.id !== id);
-    }),
+      return segment?.habits.flatMap((h) => (h.proofs ?? []).map((p) => p.id)) ?? [];
+    });
+    await deleteProofImages(removed);
+  },
 
   createHabit: (segmentId, title, targetPerWeek) =>
     mutate((s) => {
@@ -363,11 +386,51 @@ export const demoApi: Api = {
       return { doneToday: !done };
     }),
 
-  deleteHabit: (id) =>
-    mutate((s) => {
-      const { segment } = findHabit(s, id);
+  async deleteHabit(id) {
+    const removed = await mutate((s) => {
+      const { segment, habit } = findHabit(s, id);
       segment.habits = segment.habits.filter((h) => h.id !== id);
-    }),
+      return (habit.proofs ?? []).map((p) => p.id);
+    });
+    await deleteProofImages(removed);
+  },
+
+  async addProof(habitId, image) {
+    findHabit(await loadAccount(), habitId);
+    const proof: Proof = { id: newId(), date: dayKey(new Date()), createdAt: new Date().toISOString() };
+    try {
+      await (await proofDoc(proof.id)).set({ image, habitId, createdAt: proof.createdAt });
+    } catch {
+      throw new ApiError(0, "Das Foto konnte nicht gespeichert werden. Bitte versuch es erneut.");
+    }
+    const dropped = await mutate((s) => {
+      const { habit } = findHabit(s, habitId);
+      const all = [proof, ...(habit.proofs ?? [])];
+      habit.proofs = all.slice(0, MAX_PROOFS_PER_HABIT);
+      if (!habit.logs.includes(proof.date)) habit.logs = [...habit.logs, proof.date];
+      return all.slice(MAX_PROOFS_PER_HABIT).map((p) => p.id);
+    });
+    await deleteProofImages(dropped);
+    return { proof, doneToday: true };
+  },
+
+  async proofImage(proofId) {
+    const snap = await (await proofDoc(proofId)).get();
+    const image = snap.exists ? snap.data()?.image : undefined;
+    if (typeof image !== "string") throw new ApiError(404, "Foto nicht gefunden");
+    return image;
+  },
+
+  async deleteProof(proofId) {
+    await mutate((s) => {
+      for (const segment of s.segments) {
+        for (const habit of segment.habits) {
+          habit.proofs = (habit.proofs ?? []).filter((p) => p.id !== proofId);
+        }
+      }
+    });
+    await deleteProofImages([proofId]);
+  },
 
   async journal() {
     return { entries: (await loadAccount()).journal };

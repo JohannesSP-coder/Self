@@ -19,7 +19,15 @@ segmentsRouter.get("/", async (req: AuthedRequest, res) => {
   const segments = await prisma.segment.findMany({
     where: { userId: req.userId },
     orderBy: { sortOrder: "asc" },
-    include: { habits: { where: { archived: false }, include: { logs: true } } },
+    include: {
+      habits: {
+        where: { archived: false },
+        include: {
+          logs: true,
+          proofs: { select: { id: true, date: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 12 },
+        },
+      },
+    },
   });
 
   const today = todayKey();
@@ -40,6 +48,7 @@ segmentsRouter.get("/", async (req: AuthedRequest, res) => {
         doneToday: completed.has(today),
         streak: computeStreak(completedDates),
         last7: week.map((d) => completed.has(d)),
+        proofs: habit.proofs,
       };
     }),
   }));

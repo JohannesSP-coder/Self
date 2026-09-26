@@ -46,9 +46,24 @@ model Habit {
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  logs HabitLog[]
+  logs   HabitLog[]
+  proofs HabitProof[]
 
   @@index([segmentId])
+}
+
+/// A photo taken to prove a habit was done, e.g. at the gym. Stored in the database for the MVP;
+/// move the bytes to object storage (S3/R2) before real traffic.
+model HabitProof {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD, same key as HabitLog
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@index([habitId])
 }
 
 /// One check-in for a habit on a given calendar day (date stored as YYYY-MM-DD).

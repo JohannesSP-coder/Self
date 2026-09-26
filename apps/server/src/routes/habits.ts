@@ -4,6 +4,7 @@ import { prisma } from "../db.js";
 import type { AuthedRequest } from "../middleware/auth.js";
 import { requireAuth } from "../middleware/auth.js";
 import { todayKey } from "../lib/dates.js";
+import { parseImageDataUrl } from "../lib/images.js";
 
 export const habitsRouter = Router();
 habitsRouter.use(requireAuth);
@@ -71,4 +72,37 @@ habitsRouter.post("/:id/toggle-today", async (req: AuthedRequest, res) => {
 
   await prisma.habitLog.create({ data: { habitId: habit.id, date, completed: true } });
   res.json({ doneToday: true });
+});
+
+const proofSchema = z.object({ image: z.string().max(1_000_000) });
+
+// Upload a proof photo; it also counts as today's check-in.
+habitsRouter.post("/:id/proofs", async (req: AuthedRequest, res) => {
+  const habit = await prisma.habit.findFirst({
+    where: { id: req.params.id, segment: { userId: req.userId } },
+  });
+  if (!habit) {
+    res.status(404).json({ error: "Habit nicht gefunden" });
+    return;
+  }
+  const parsed = proofSchema.safeParse(req.body);
+  const image = parsed.success ? parseImageDataUrl(parsed.data.image) : null;
+  if (!image) {
+    res.status(400).json({ error: "Bitte ein JPG-, PNG- oder WebP-Foto bis 700 KB hochladen." });
+    return;
+  }
+
+  const date = todayKey();
+  const [proof] = await prisma.$transaction([
+    prisma.habitProof.create({
+      data: { habitId: habit.id, date, mimeType: image.mimeType, data: new Uint8Array(image.data) },
+      select: { id: true, date: true, createdAt: true },
+    }),
+    prisma.habitLog.upsert({
+      where: { habitId_date: { habitId: habit.id, date } },
+      create: { habitId: habit.id, date, completed: true },
+      update: { completed: true },
+    }),
+  ]);
+  res.status(201).json({ proof, doneToday: true });
 });

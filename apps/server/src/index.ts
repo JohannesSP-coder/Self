@@ -6,12 +6,14 @@ import { coachRouter } from "./routes/coach.js";
 import { habitsRouter } from "./routes/habits.js";
 import { journalRouter } from "./routes/journal.js";
 import { meRouter } from "./routes/me.js";
+import { proofsRouter } from "./routes/proofs.js";
 import { segmentsRouter } from "./routes/segments.js";
 import { urgesRouter } from "./routes/urges.js";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Proof photos arrive as base64 data URLs (≤700 KB of image ≈ 950 KB of JSON).
+app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
@@ -19,6 +21,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/me", meRouter);
 app.use("/api/segments", segmentsRouter);
 app.use("/api/habits", habitsRouter);
+app.use("/api/proofs", proofsRouter);
 app.use("/api/journal", journalRouter);
 app.use("/api/urges", urgesRouter);
 app.use("/api/coach", coachRouter);

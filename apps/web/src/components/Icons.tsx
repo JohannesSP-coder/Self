@@ -126,6 +126,19 @@ export const TrashIcon = (p: IconProps) => (
   </Stroke>
 );
 
+export const CameraIcon = (p: IconProps) => (
+  <Stroke {...p}>
+    <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.3l1.4-2h5.6l1.4 2h2.3A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </Stroke>
+);
+
+export const CloseIcon = (p: IconProps) => (
+  <Stroke width={2} {...p}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </Stroke>
+);
+
 export const LogoutIcon = (p: IconProps) => (
   <Stroke {...p}>
     <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
