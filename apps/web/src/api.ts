@@ -67,6 +67,11 @@ export interface Tracker {
   blocker: Blocker;
 }
 
+/** A registered device for reminder push notifications: a browser or the Expo app. */
+export type PushSubscriptionInput =
+  | { kind: "web"; endpoint: string; keys: { p256dh: string; auth: string } }
+  | { kind: "expo"; token: string };
+
 export interface CoachMessage {
   id: string;
   role: "user" | "assistant";
@@ -196,6 +201,12 @@ const httpApi = {
   /** `onText` receives the whole reply so far where the backend can stream; the HTTP API cannot. */
   sendCoachMessage: (message: string, _onText?: (text: string) => void) =>
     request<{ message: CoachMessage }>("/coach/message", { method: "POST", body: { message } }),
+
+  /** null when the server has no VAPID keys configured, i.e. push reminders are off entirely. */
+  pushPublicKey: () => request<{ publicKey: string | null }>("/push/public-key"),
+  subscribePush: (subscription: PushSubscriptionInput) =>
+    request<void>("/push/subscribe", { method: "POST", body: subscription }),
+  unsubscribePush: (endpoint: string) => request<void>("/push/subscribe", { method: "DELETE", body: { endpoint } }),
 };
 
 export type Api = typeof httpApi;

@@ -23,6 +23,37 @@ model User {
   journalEntries JournalEntry[]
   urgeTrackers  UrgeTracker[]
   conversations CoachConversation[]
+  pushSubscriptions PushSubscription[]
+  sentReminders     SentReminder[]
+}
+
+/// A device registered for reminder push notifications — a browser (web push) or the Expo app.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // "web" | "expo"
+  /// Web: the push endpoint URL. Expo: the ExponentPushToken string. Either way, the device's
+  /// natural unique identity, so re-subscribing the same device just updates its row.
+  endpoint  String
+  /// Web only: JSON `{ keys: { p256dh, auth } }` needed to encrypt the payload. Null for Expo.
+  data      String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+}
+
+/// Remembers a reminder already sent today so a user is never nudged twice for the same thing.
+model SentReminder {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminderId String // e.g. "2026-09-26:night:<habitId>", see lib/reminders.ts
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, reminderId])
+  @@index([userId])
 }
 
 /// A life area the user defines for themselves, e.g. Fitness, Mindset, Finanzen.

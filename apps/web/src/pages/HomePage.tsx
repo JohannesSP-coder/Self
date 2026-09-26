@@ -4,6 +4,7 @@ import { api, errorMessage, type Segment, type Tracker } from "../api";
 import { useAuth } from "../auth";
 import { Avatar } from "../components/Avatar";
 import { ChatIcon, ChevronRightIcon, FlameIcon, LogoutIcon, SEGMENT_ICONS, SegmentIcon, UserIcon } from "../components/Icons";
+import { ReminderBanner } from "../components/ReminderBanner";
 import { isFocusSegment } from "../util";
 
 function greeting(): string {
@@ -111,6 +112,8 @@ export function HomePage() {
           <div className="stat-label">Stimmung</div>
         </div>
       </div>
+
+      <ReminderBanner segments={segments} />
 
       <div className="section-head">
         <h2>Deine Bereiche</h2>

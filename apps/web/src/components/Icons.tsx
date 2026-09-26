@@ -139,6 +139,13 @@ export const CloseIcon = (p: IconProps) => (
   </Stroke>
 );
 
+export const BellIcon = (p: IconProps) => (
+  <Stroke {...p}>
+    <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z" />
+    <path d="M10 19a2 2 0 0 0 4 0" />
+  </Stroke>
+);
+
 export const UserIcon = (p: IconProps) => (
   <Stroke {...p}>
     <circle cx="12" cy="8.5" r="3.8" />
@@ -190,11 +197,20 @@ export const SendIcon = ({ size = 18 }: IconProps) => (
   </svg>
 );
 
+export const BookIcon = (p: IconProps) => (
+  <Stroke {...p}>
+    <path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5C4.7 19 4 18.3 4 17.5z" />
+    <path d="M20 5.5C20 4.7 19.3 4 18.5 4H13v15h5.5c.8 0 1.5-.7 1.5-1.5z" />
+    <path d="M11 7.5h2M11 11h2" />
+  </Stroke>
+);
+
 export const SEGMENT_ICONS: Record<string, { label: string; Icon: (p: IconProps) => ReactNode }> = {
   dumbbell: { label: "Fitness", Icon: DumbbellIcon },
   leaf: { label: "Mindset", Icon: LeafIcon },
   moon: { label: "Schlaf", Icon: MoonIcon },
   chart: { label: "Finanzen", Icon: ChartIcon },
+  book: { label: "Lernen", Icon: BookIcon },
   star: { label: "Sonstiges", Icon: StarIcon },
 };
 

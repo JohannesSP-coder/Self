@@ -1,10 +1,12 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, errorMessage } from "../api";
+import { ApiError, api, errorMessage } from "../api";
 import { useAuth } from "../auth";
 import { Avatar } from "../components/Avatar";
 import { ConfirmBox } from "../components/ConfirmBox";
 import { ArrowLeftIcon, CameraIcon, LogoutIcon } from "../components/Icons";
+import { Toggle } from "../components/Toggle";
+import { currentPushEndpoint, disablePushReminders, enablePushReminders, supportsPush } from "../push";
 
 export function ProfilePage() {
   const { user, avatarUrl, updateAvatar, removeAvatar, logout } = useAuth();
@@ -12,6 +14,42 @@ export function ProfilePage() {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasPhoto = Boolean(user?.avatarVersion);
+
+  // Only shown once we know both the browser and the server can actually deliver a push (neither
+  // holds in the claude.ai demo, where the reminder still shows up as the in-app banner on Home).
+  const [pushAvailable, setPushAvailable] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!supportsPush()) return;
+    let cancelled = false;
+    Promise.all([api.pushPublicKey().catch(() => ({ publicKey: null })), currentPushEndpoint()]).then(
+      ([{ publicKey }, endpoint]) => {
+        if (cancelled) return;
+        setPushAvailable(Boolean(publicKey));
+        setPushEnabled(endpoint !== null);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function onTogglePush(next: boolean) {
+    setPushBusy(true);
+    setPushError(null);
+    try {
+      if (next) await enablePushReminders();
+      else await disablePushReminders();
+      setPushEnabled(next);
+    } catch (err) {
+      setPushError(err instanceof Error ? err.message : "Etwas ist schiefgelaufen. Bitte versuch es erneut.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function onPick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -102,6 +140,26 @@ export function ProfilePage() {
         )}
         {hasPhoto && !avatarUrl && <p className="profile-hint">Foto wird geladen…</p>}
       </section>
+
+      {pushAvailable && (
+        <section className="card reminder-card">
+          <div className="reminder-card-row">
+            <div className="grow">
+              <div className="reminder-card-title">Erinnerungen</div>
+              <p className="profile-hint no-margin">
+                Ein kurzer Hinweis am Nachmittag oder Abend, wenn noch ein Habit offen ist.
+              </p>
+            </div>
+            <Toggle checked={pushEnabled} onChange={onTogglePush} label="Erinnerungen an oder aus" />
+          </div>
+          {pushBusy && <p className="profile-hint">Wird eingerichtet…</p>}
+          {pushError && (
+            <div className="error" role="alert">
+              {pushError}
+            </div>
+          )}
+        </section>
+      )}
 
       <button type="button" className="btn btn-outline profile-logout" onClick={logout}>
         <LogoutIcon size={17} /> Abmelden

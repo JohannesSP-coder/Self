@@ -566,4 +566,16 @@ export const demoApi: Api = {
     });
     return { message: assistantMsg };
   },
+
+  // Real push needs a live server-side scheduler; the demo shows the same reminder as an in-app
+  // banner instead (see reminders.ts + HomePage), computed straight from the loaded segments.
+  async pushPublicKey() {
+    return { publicKey: null };
+  },
+  async subscribePush() {
+    throw new ApiError(0, "Push-Erinnerungen sind in der Demo nicht verfügbar. Öffne dafür die echte Website.");
+  },
+  async unsubscribePush() {
+    throw new ApiError(0, "Push-Erinnerungen sind in der Demo nicht verfügbar. Öffne dafür die echte Website.");
+  },
 };
