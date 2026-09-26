@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
+import { createDefaultSegmentsForUser } from "../lib/defaultSegments.js";
 
 export const authRouter = Router();
 
@@ -31,6 +32,7 @@ authRouter.post("/register", async (req, res) => {
   const user = await prisma.user.create({
     data: { email, passwordHash, name },
   });
+  await createDefaultSegmentsForUser(user.id);
 
   const token = jwt.sign({ sub: user.id }, env.jwtSecret, { expiresIn: "30d" });
   res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name } });
