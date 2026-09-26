@@ -85,20 +85,42 @@ model UrgeTracker {
   streakStartAt DateTime @default(now())
   createdAt    DateTime @default(now())
 
-  events UrgeEvent[]
+  /// App-blocker config. Enforcement happens on the device (iOS Screen Time / Android);
+  /// the server stores it so it syncs across devices and the coach can see it.
+  blockEnabled       Boolean @default(false)
+  blockFrom          String? // "HH:MM" local time; null together with blockUntil = always blocked
+  blockUntil         String?
+  unlockDelayMinutes Int     @default(15)
+
+  events     UrgeEvent[]
+  blockRules BlockRule[]
 
   @@index([userId])
 }
 
-/// A logged moment for an UrgeTracker: either a resisted urge or a relapse/reset.
+/// A logged moment for an UrgeTracker.
 model UrgeEvent {
   id            String      @id @default(cuid())
   trackerId     String
   tracker       UrgeTracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
-  type          String // "urge_resisted" | "relapse"
+  type          String // "urge_resisted" | "relapse" | "unlock_requested"
   note          String?
   createdAt     DateTime    @default(now())
 
+  @@index([trackerId])
+}
+
+/// Something the app blocker locks for a tracker: an app, a website, or a content category.
+model BlockRule {
+  id        String      @id @default(cuid())
+  trackerId String
+  tracker   UrgeTracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  kind      String // "app" | "website" | "category"
+  target    String // platform app identifier, domain, or category key such as "adult"
+  label     String
+  createdAt DateTime    @default(now())
+
+  @@unique([trackerId, kind, target])
   @@index([trackerId])
 }
 

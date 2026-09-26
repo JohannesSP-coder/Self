@@ -8,7 +8,18 @@ export async function buildUserContextSummary(userId: string): Promise<string> {
       where: { userId },
       include: { habits: { where: { archived: false }, include: { logs: true } } },
     }),
-    prisma.urgeTracker.findMany({ where: { userId } }),
+    prisma.urgeTracker.findMany({
+      where: { userId },
+      include: {
+        blockRules: true,
+        events: {
+          where: {
+            type: "unlock_requested",
+            createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+        },
+      },
+    }),
     prisma.journalEntry.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -46,6 +57,21 @@ export async function buildUserContextSummary(userId: string): Promise<string> {
         Math.floor((Date.now() - tracker.streakStartAt.getTime()) / (1000 * 60 * 60 * 24)),
       );
       lines.push(`  - "${tracker.name}": ${days} Tage sauber/abstinent`);
+      if (tracker.blockEnabled && tracker.blockRules.length > 0) {
+        const window =
+          tracker.blockFrom && tracker.blockUntil
+            ? `${tracker.blockFrom}-${tracker.blockUntil} Uhr`
+            : "rund um die Uhr";
+        const targets = tracker.blockRules.map((r) => r.label).join(", ");
+        lines.push(`    App-Blocker aktiv (${window}): ${targets}`);
+      }
+      if (tracker.events.length > 0) {
+        lines.push(
+          `    Entsperr-Versuche in den letzten 7 Tagen: ${tracker.events.length} (${tracker.events
+            .map((e) => e.note)
+            .join(", ")})`,
+        );
+      }
     }
   }
 
@@ -75,5 +101,7 @@ Halte Antworten kurz und konkret (meist 3-6 Sätze plus ggf. ein bis drei Stichp
 Beziehe dich aktiv auf die konkreten Daten des Nutzers (Streaks, Habits, Journal-Stimmung), die dir
 im Kontext unten mitgegeben werden - generische Ratschläge ohne Bezug zur Realität der Person vermeiden.
 Bei Rückfällen (z.B. bei Sucht-Trackern) reagiere nicht wertend, sondern hilf, den nächsten Schritt zu finden.
+Zeigt der Kontext Entsperr-Versuche beim App-Blocker, sprich sie behutsam an: frag, was in dem Moment los war,
+statt den Versuch zu kritisieren.
 Du bist kein Ersatz für professionelle medizinische oder psychologische Hilfe - weise bei ernsten Anliegen
 (z.B. Suizidgedanken, schwere Sucht) freundlich darauf hin, sich zusätzlich professionelle Unterstützung zu suchen.`;
