@@ -14,19 +14,19 @@ const DEFAULT_SEGMENTS: Array<{
   {
     name: "Fitness",
     icon: "dumbbell",
-    color: "#2A6350",
+    color: "#FF5A52",
     habits: [{ title: "Training", targetPerWeek: 4 }],
   },
   {
     name: "Mindset",
     icon: "leaf",
-    color: "#5F4270",
+    color: "#FF5A52",
     habits: [{ title: "10 Min. Meditation", targetPerWeek: 5 }],
   },
   {
     name: "Schlaf",
     icon: "moon",
-    color: "#33538C",
+    color: "#D12A24",
     habits: [
       { title: "Bildschirm aus bis 22 Uhr", targetPerWeek: 7 },
       { title: "Vor Mitternacht im Bett", targetPerWeek: 7 },
@@ -35,7 +35,7 @@ const DEFAULT_SEGMENTS: Array<{
   {
     name: "Finanzen",
     icon: "chart",
-    color: "#8A5A12",
+    color: "#FF5A52",
     habits: [{ title: "Ausgaben eintragen", targetPerWeek: 7 }],
   },
 ];
