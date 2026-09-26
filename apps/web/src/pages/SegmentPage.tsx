@@ -6,7 +6,7 @@ import { ProofStrip, ProofViewer } from "../components/ProofPhotos";
 import { compressPhoto } from "../images";
 import { forgetProof } from "../proofImages";
 import { ArrowLeftIcon, CheckIcon, FlameIcon, SegmentIcon, TrashIcon } from "../components/Icons";
-import { isFocusSegment } from "../util";
+import { isFocusSegment, proofHint } from "../util";
 
 function lastSevenDayLabels(): string[] {
   const labels: string[] = [];
@@ -141,6 +141,7 @@ export function SegmentPage() {
   const labels = lastSevenDayLabels();
   const habits = segment?.habits ?? [];
   const focus = segment ? isFocusSegment(segment) : false;
+  const hint = segment ? proofHint(segment) : "";
 
   return (
     <div className="page">
@@ -223,6 +224,7 @@ export function SegmentPage() {
               </div>
               <ProofStrip
                 habit={habit}
+                hint={hint}
                 uploading={uploading === habit.id}
                 onPick={(file) => addProof(habit.id, file)}
                 onOpen={(proof) => setViewing({ habitTitle: habit.title, proof })}

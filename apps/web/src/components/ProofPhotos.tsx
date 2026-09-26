@@ -35,11 +35,14 @@ function ProofThumb({ proof, onOpen }: { proof: Proof; onOpen: () => void }) {
 /** The per-habit photo strip: a camera tile to add proof, then the latest proofs. */
 export function ProofStrip({
   habit,
+  hint,
   uploading,
   onPick,
   onOpen,
 }: {
   habit: Habit;
+  /** Shown while the habit has no proof photo yet. */
+  hint: string;
   uploading: boolean;
   onPick: (file: File) => void;
   onOpen: (proof: Proof) => void;
@@ -70,10 +73,7 @@ export function ProofStrip({
           onChange={onChange}
         />
         {habit.proofs.length === 0 ? (
-          <p className="proof-hint">
-            Beweisfoto machen, z.B. im Gym beim Training oder von deinen Heften beim Lernen. Das Habit zählt dann für
-            heute als erledigt.
-          </p>
+          <p className="proof-hint">{hint}</p>
         ) : (
           habit.proofs.map((p) => <ProofThumb key={p.id} proof={p} onOpen={() => onOpen(p)} />)
         )}

@@ -4,6 +4,14 @@ export function isFocusSegment(segment: Segment): boolean {
   return segment.icon === "moon" || segment.name.trim().toLowerCase() === "schlaf";
 }
 
+/** The example shown on a habit that has no proof photo yet, matched to its life area. */
+export function proofHint(segment: Segment): string {
+  if (isFocusSegment(segment)) {
+    return "Mach abends ein Foto, z.B. von deiner Schlafmaske, deiner Blaulichtfilterbrille oder deinem Bett. So machst du dir klar, dass jetzt Abend ist, und das Habit zählt für heute als erledigt.";
+  }
+  return "Beweisfoto machen, z.B. im Gym beim Training oder von deinen Heften beim Lernen. Das Habit zählt dann für heute als erledigt.";
+}
+
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
