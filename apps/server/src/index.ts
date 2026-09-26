@@ -25,4 +25,7 @@ app.use("/api/coach", coachRouter);
 
 app.listen(env.port, () => {
   console.log(`Meglio server listening on http://localhost:${env.port}`);
+  if (!env.anthropicApiKey) {
+    console.warn("ANTHROPIC_API_KEY is not set - the coach will answer 503 until it is configured in .env");
+  }
 });

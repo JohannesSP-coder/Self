@@ -3,6 +3,18 @@ export function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Date keys for the last `days` days, oldest first, ending today. */
+export function lastDayKeys(days: number): string[] {
+  const keys: string[] = [];
+  const cursor = new Date();
+  cursor.setUTCDate(cursor.getUTCDate() - (days - 1));
+  for (let i = 0; i < days; i++) {
+    keys.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return keys;
+}
+
 /** Computes the current consecutive-day streak ending today (or yesterday, so a day not yet logged doesn't zero it). */
 export function computeStreak(completedDates: string[]): number {
   const dates = new Set(completedDates);

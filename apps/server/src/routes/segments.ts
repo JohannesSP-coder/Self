@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 import type { AuthedRequest } from "../middleware/auth.js";
 import { requireAuth } from "../middleware/auth.js";
-import { computeStreak, todayKey } from "../lib/dates.js";
+import { computeStreak, lastDayKeys, todayKey } from "../lib/dates.js";
 
 export const segmentsRouter = Router();
 segmentsRouter.use(requireAuth);
@@ -23,6 +23,7 @@ segmentsRouter.get("/", async (req: AuthedRequest, res) => {
   });
 
   const today = todayKey();
+  const week = lastDayKeys(7);
   const shaped = segments.map((segment) => ({
     id: segment.id,
     name: segment.name,
@@ -30,13 +31,15 @@ segmentsRouter.get("/", async (req: AuthedRequest, res) => {
     color: segment.color,
     habits: segment.habits.map((habit) => {
       const completedDates = habit.logs.filter((l) => l.completed).map((l) => l.date);
+      const completed = new Set(completedDates);
       return {
         id: habit.id,
         title: habit.title,
         notes: habit.notes,
         targetPerWeek: habit.targetPerWeek,
-        doneToday: completedDates.includes(today),
+        doneToday: completed.has(today),
         streak: computeStreak(completedDates),
+        last7: week.map((d) => completed.has(d)),
       };
     }),
   }));

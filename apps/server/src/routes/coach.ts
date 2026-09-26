@@ -39,9 +39,7 @@ coachRouter.post("/message", async (req: AuthedRequest, res) => {
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({
-      error: "Der Coach ist nicht konfiguriert (ANTHROPIC_API_KEY fehlt auf dem Server)",
-    });
+    res.status(503).json({ error: "Der Coach ist gerade nicht verfügbar. Bitte versuch es später erneut." });
     return;
   }
 
