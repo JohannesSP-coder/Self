@@ -1370,6 +1370,14 @@ button:disabled {
   border: 1px solid var(--border-strong);
 }
 
+.bottom-confirm {
+  margin-top: 28px;
+}
+
+.stack > .confirm-box {
+  background: var(--surface);
+}
+
 .confirm-text {
   font-size: 13px;
   color: var(--ink-soft);

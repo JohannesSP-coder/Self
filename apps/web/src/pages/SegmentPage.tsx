@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errorMessage, type Segment } from "../api";
+import { ConfirmBox } from "../components/ConfirmBox";
 import { ArrowLeftIcon, CheckIcon, FlameIcon, SegmentIcon, TrashIcon } from "../components/Icons";
 import { isFocusSegment } from "../util";
 
@@ -24,6 +25,9 @@ export function SegmentPage() {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState(5);
+  // Which delete is waiting for confirmation: "segment", a habit id, or nothing.
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -66,24 +70,28 @@ export function SegmentPage() {
     }
   }
 
-  async function removeHabit(habitId: string, habitTitle: string) {
-    if (!window.confirm(`"${habitTitle}" wirklich löschen? Der Verlauf geht dabei verloren.`)) return;
+  async function removeHabit(habitId: string) {
+    setDeleting(true);
     try {
       await api.deleteHabit(habitId);
+      setConfirming(null);
       await load();
     } catch (err) {
       setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
     }
   }
 
   async function removeSegment() {
     if (!segment) return;
-    if (!window.confirm(`Bereich "${segment.name}" mit allen Habits löschen?`)) return;
+    setDeleting(true);
     try {
       await api.deleteSegment(segment.id);
       navigate("/", { replace: true });
     } catch (err) {
       setError(errorMessage(err));
+      setDeleting(false);
     }
   }
 
@@ -141,35 +149,45 @@ export function SegmentPage() {
         {segment && habits.length === 0 && (
           <div className="empty">Noch keine Habits in diesem Bereich. Leg unten dein erstes an.</div>
         )}
-        {habits.map((habit) => (
-          <div key={habit.id} className="habit-row">
-            <button
-              type="button"
-              className={habit.doneToday ? "check done" : "check"}
-              aria-pressed={habit.doneToday}
-              aria-label={`${habit.title} heute erledigt`}
-              disabled={pending === habit.id}
-              onClick={() => toggle(habit.id)}
-            >
-              {habit.doneToday && <CheckIcon size={14} />}
-            </button>
-            <div className="grow">
-              <div className="habit-title">{habit.title}</div>
-              <div className="habit-sub">Ziel: {habit.targetPerWeek}x / Woche</div>
+        {habits.map((habit) =>
+          confirming === habit.id ? (
+            <ConfirmBox
+              key={habit.id}
+              text={`„${habit.title}“ löschen? Der Verlauf geht dabei verloren.`}
+              busy={deleting}
+              onConfirm={() => removeHabit(habit.id)}
+              onCancel={() => setConfirming(null)}
+            />
+          ) : (
+            <div key={habit.id} className="habit-row">
+              <button
+                type="button"
+                className={habit.doneToday ? "check done" : "check"}
+                aria-pressed={habit.doneToday}
+                aria-label={`${habit.title} heute erledigt`}
+                disabled={pending === habit.id}
+                onClick={() => toggle(habit.id)}
+              >
+                {habit.doneToday && <CheckIcon size={14} />}
+              </button>
+              <div className="grow">
+                <div className="habit-title">{habit.title}</div>
+                <div className="habit-sub">Ziel: {habit.targetPerWeek}x / Woche</div>
+              </div>
+              <div className={habit.streak > 0 ? "streak" : "streak muted"}>
+                <FlameIcon /> {habit.streak}
+              </div>
+              <button
+                type="button"
+                className="icon-button subtle"
+                aria-label={`${habit.title} löschen`}
+                onClick={() => setConfirming(habit.id)}
+              >
+                <TrashIcon size={16} />
+              </button>
             </div>
-            <div className={habit.streak > 0 ? "streak" : "streak muted"}>
-              <FlameIcon /> {habit.streak}
-            </div>
-            <button
-              type="button"
-              className="icon-button subtle"
-              aria-label={`${habit.title} löschen`}
-              onClick={() => removeHabit(habit.id, habit.title)}
-            >
-              <TrashIcon size={16} />
-            </button>
-          </div>
-        ))}
+          ),
+        )}
 
         {adding ? (
           <form className="card form-card" onSubmit={addHabit}>
@@ -208,11 +226,22 @@ export function SegmentPage() {
         )}
       </div>
 
-      {segment && (
-        <button type="button" className="danger-link" onClick={removeSegment}>
-          Bereich löschen
-        </button>
-      )}
+      {segment &&
+        (confirming === "segment" ? (
+          <div className="bottom-confirm">
+            <ConfirmBox
+              text={`Bereich „${segment.name}“ mit allen Habits löschen?`}
+              confirmLabel="Bereich löschen"
+              busy={deleting}
+              onConfirm={removeSegment}
+              onCancel={() => setConfirming(null)}
+            />
+          </div>
+        ) : (
+          <button type="button" className="danger-link" onClick={() => setConfirming("segment")}>
+            Bereich löschen
+          </button>
+        ))}
     </div>
   );
 }

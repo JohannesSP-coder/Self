@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, errorMessage, type JournalEntry } from "../api";
+import { ConfirmBox } from "../components/ConfirmBox";
 import { PlusIcon, TrashIcon } from "../components/Icons";
 import { formatEntryDate } from "../util";
 
@@ -10,6 +11,8 @@ export function JournalPage() {
   const [draft, setDraft] = useState("");
   const [mood, setMood] = useState(4);
   const [saving, setSaving] = useState(false);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     api
@@ -40,12 +43,15 @@ export function JournalPage() {
   }
 
   async function remove(entry: JournalEntry) {
-    if (!window.confirm("Diesen Eintrag löschen?")) return;
+    setDeleting(true);
     try {
       await api.deleteEntry(entry.id);
       setEntries((prev) => prev?.filter((e) => e.id !== entry.id) ?? null);
+      setConfirming(null);
     } catch (err) {
       setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -121,13 +127,21 @@ export function JournalPage() {
                   type="button"
                   className="icon-button subtle"
                   aria-label="Eintrag löschen"
-                  onClick={() => remove(entry)}
+                  onClick={() => setConfirming(entry.id)}
                 >
                   <TrashIcon size={15} />
                 </button>
               </div>
             </div>
             <p className="journal-body">{entry.body}</p>
+            {confirming === entry.id && (
+              <ConfirmBox
+                text="Diesen Eintrag löschen?"
+                busy={deleting}
+                onConfirm={() => remove(entry)}
+                onCancel={() => setConfirming(null)}
+              />
+            )}
           </article>
         ))}
       </div>

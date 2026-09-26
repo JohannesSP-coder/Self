@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errorMessage, type BlockRule, type Tracker } from "../api";
+import { ConfirmBox } from "../components/ConfirmBox";
 import { ArrowLeftIcon, LockIcon, TrashIcon } from "../components/Icons";
 import { Toggle } from "../components/Toggle";
 
@@ -39,6 +40,8 @@ export function BlockerPage() {
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [enabled, setEnabled] = useState(false);
   const [scheduled, setScheduled] = useState(true);
@@ -121,12 +124,13 @@ export function BlockerPage() {
 
   async function deleteTracker() {
     if (!tracker) return;
-    if (!window.confirm(`Tracker "${tracker.name}" mit Verlauf und Blocker löschen?`)) return;
+    setDeleting(true);
     try {
       await api.deleteTracker(tracker.id);
       navigate("/urges", { replace: true });
     } catch (err) {
       setError(errorMessage(err));
+      setDeleting(false);
     }
   }
 
@@ -259,9 +263,21 @@ export function BlockerPage() {
         </button>
       </div>
 
-      <button type="button" className="danger-link" onClick={deleteTracker}>
-        Tracker löschen
-      </button>
+      {confirmingDelete ? (
+        <div className="bottom-confirm">
+          <ConfirmBox
+            text={`Tracker „${tracker?.name ?? ""}“ mit Verlauf und Blocker löschen?`}
+            confirmLabel="Tracker löschen"
+            busy={deleting}
+            onConfirm={deleteTracker}
+            onCancel={() => setConfirmingDelete(false)}
+          />
+        </div>
+      ) : (
+        <button type="button" className="danger-link" onClick={() => setConfirmingDelete(true)}>
+          Tracker löschen
+        </button>
+      )}
     </div>
   );
 }
