@@ -5,6 +5,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  /** Changes whenever the profile picture changes; null when there is none. */
+  avatarVersion: string | null;
 }
 
 export interface Proof {
@@ -155,6 +157,10 @@ const httpApi = {
   register: (name: string, email: string, password: string) =>
     request<AuthResponse>("/auth/register", { method: "POST", body: { name, email, password } }),
   me: () => request<{ user: User }>("/me"),
+  /** `image` is a small square JPEG data URL (see compressAvatar). */
+  setAvatar: (image: string) => request<{ user: User }>("/me/avatar", { method: "PUT", body: { image } }),
+  removeAvatar: () => request<{ user: User }>("/me/avatar", { method: "DELETE" }),
+  avatarImage: () => requestImageUrl("/me/avatar"),
 
   segments: () => request<{ segments: Segment[] }>("/segments"),
   createSegment: (name: string, icon: string) =>

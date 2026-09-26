@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api, errorMessage, type Segment, type Tracker } from "../api";
 import { useAuth } from "../auth";
-import { ChatIcon, ChevronRightIcon, FlameIcon, LogoutIcon, SEGMENT_ICONS, SegmentIcon } from "../components/Icons";
+import { Avatar } from "../components/Avatar";
+import { ChatIcon, ChevronRightIcon, FlameIcon, LogoutIcon, SEGMENT_ICONS, SegmentIcon, UserIcon } from "../components/Icons";
 import { isFocusSegment } from "../util";
 
 function greeting(): string {
@@ -70,16 +71,19 @@ export function HomePage() {
         <div className="avatar-menu">
           <button
             type="button"
-            className="avatar"
+            className="avatar-button"
             aria-label="Konto-Menü"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            {user?.name.charAt(0).toUpperCase()}
+            <Avatar />
           </button>
           {menuOpen && (
             <div className="menu" role="menu">
               <div className="menu-mail">{user?.email}</div>
+              <Link to="/profil" role="menuitem" className="menu-item">
+                <UserIcon size={16} /> Profil &amp; Profilbild
+              </Link>
               <button type="button" role="menuitem" className="menu-item" onClick={logout}>
                 <LogoutIcon size={16} /> Abmelden
               </button>

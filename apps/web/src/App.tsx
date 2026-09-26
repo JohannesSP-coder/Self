@@ -8,6 +8,7 @@ import { HomePage } from "./pages/HomePage";
 import { JournalPage } from "./pages/JournalPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { SegmentPage } from "./pages/SegmentPage";
 import { UrgesPage } from "./pages/UrgesPage";
 
@@ -56,6 +57,7 @@ export function AppRoutes() {
           <Route path="urges" element={<UrgesPage />} />
           <Route path="urges/:id/blocker" element={<BlockerPage />} />
           <Route path="coach" element={<CoachPage />} />
+          <Route path="profil" element={<ProfilePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

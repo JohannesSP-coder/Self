@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
 import { createDefaultSegmentsForUser } from "../lib/defaultSegments.js";
+import { publicUser } from "../lib/users.js";
 
 export const authRouter = Router();
 
@@ -35,7 +36,7 @@ authRouter.post("/register", async (req, res) => {
   await createDefaultSegmentsForUser(user.id);
 
   const token = jwt.sign({ sub: user.id }, env.jwtSecret, { expiresIn: "30d" });
-  res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name } });
+  res.status(201).json({ token, user: publicUser(user) });
 });
 
 const loginSchema = z.object({
@@ -64,5 +65,5 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign({ sub: user.id }, env.jwtSecret, { expiresIn: "30d" });
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+  res.json({ token, user: publicUser(user) });
 });

@@ -916,6 +916,21 @@ button:disabled {
   font-weight: 700;
   font-size: 15px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-button {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
 }
 
 .avatar-menu {
@@ -959,6 +974,114 @@ button:disabled {
 .menu-item:hover {
   background: var(--accent-soft);
   color: var(--accent-text);
+}
+
+/* ---------- Profile ---------- */
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  margin: -6px;
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.sidebar-profile:hover,
+.sidebar-profile.active {
+  background: var(--surface-2);
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 18px 20px;
+  text-align: center;
+}
+
+.profile-photo {
+  position: relative;
+  margin-bottom: 10px;
+  transition: opacity 0.15s;
+}
+
+.profile-photo.busy {
+  opacity: 0.55;
+}
+
+.profile-photo .avatar {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent);
+}
+
+.profile-photo-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.profile-mail {
+  font-size: 13px;
+  color: var(--ink-faint);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 16px;
+}
+
+.profile-actions label.btn {
+  cursor: pointer;
+}
+
+.btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.profile-card .confirm-box {
+  width: 100%;
+  max-width: 340px;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.profile-hint {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  max-width: 320px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.profile-logout {
+  margin-top: 16px;
 }
 
 .stat-row {

@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
+import { Avatar } from "./Avatar";
 import { ChatIcon, HomeIcon, JournalIcon, LogoutIcon, ShieldIcon } from "./Icons";
 
 const NAV = [
@@ -44,11 +45,13 @@ export function Layout() {
         </nav>
         <div className="spacer" />
         <div className="sidebar-user">
-          <div className="avatar">{user?.name.charAt(0).toUpperCase()}</div>
-          <div className="sidebar-user-text">
-            <div className="sidebar-user-name">{user?.name}</div>
-            <div className="sidebar-user-mail">{user?.email}</div>
-          </div>
+          <NavLink to="/profil" className="sidebar-profile" aria-label="Profil öffnen">
+            <Avatar />
+            <div className="sidebar-user-text">
+              <div className="sidebar-user-name">{user?.name}</div>
+              <div className="sidebar-user-mail">{user?.email}</div>
+            </div>
+          </NavLink>
           <button type="button" className="icon-button" onClick={logout} aria-label="Abmelden">
             <LogoutIcon size={18} />
           </button>

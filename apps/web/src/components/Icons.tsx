@@ -139,6 +139,13 @@ export const CloseIcon = (p: IconProps) => (
   </Stroke>
 );
 
+export const UserIcon = (p: IconProps) => (
+  <Stroke {...p}>
+    <circle cx="12" cy="8.5" r="3.8" />
+    <path d="M4.5 20c.9-3.8 3.9-6 7.5-6s6.6 2.2 7.5 6" />
+  </Stroke>
+);
+
 export const LogoutIcon = (p: IconProps) => (
   <Stroke {...p}>
     <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />

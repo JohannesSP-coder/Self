@@ -209,6 +209,17 @@ async function deleteProofImages(ids: string[]): Promise<void> {
   await Promise.all(ids.map(async (id) => (await proofDoc(id)).delete().catch(() => undefined)));
 }
 
+// The profile picture is a document of its own too, so the account document stays small.
+async function avatarDoc(): Promise<DocRef> {
+  const { doc } = await requireStore();
+  return doc.collection("profile").doc("avatar");
+}
+
+/** Accounts created before profile pictures existed have no `avatarVersion`. */
+function profileOf(state: DemoState): User {
+  return { ...state.profile, avatarVersion: state.profile.avatarVersion ?? null };
+}
+
 function notFound(what: string): never {
   throw new ApiError(404, `${what} nicht gefunden`);
 }
@@ -329,7 +340,7 @@ export const demoApi: Api = {
     if (state.profile.email.toLowerCase() !== email.trim().toLowerCase()) {
       throw new ApiError(401, "Diese E-Mail passt nicht zu deinem Demo-Konto.");
     }
-    return { token: "demo", user: state.profile };
+    return { token: "demo", user: profileOf(state) };
   },
 
   async register(name, email) {
@@ -339,7 +350,7 @@ export const demoApi: Api = {
     }
     const state: DemoState = {
       version: 1,
-      profile: { id: newId(), name: name.trim(), email: email.trim() },
+      profile: { id: newId(), name: name.trim(), email: email.trim(), avatarVersion: null },
       segments: defaultSegments(),
       journal: [],
       trackers: [],
@@ -350,7 +361,37 @@ export const demoApi: Api = {
   },
 
   async me() {
-    return { user: (await loadAccount()).profile };
+    return { user: profileOf(await loadAccount()) };
+  },
+
+  async setAvatar(image) {
+    await loadAccount();
+    try {
+      await (await avatarDoc()).set({ image });
+    } catch {
+      throw new ApiError(0, "Das Profilbild konnte nicht gespeichert werden. Bitte versuch es erneut.");
+    }
+    const user = await mutate((s) => {
+      s.profile.avatarVersion = new Date().toISOString();
+      return profileOf(s);
+    });
+    return { user };
+  },
+
+  async removeAvatar() {
+    const user = await mutate((s) => {
+      s.profile.avatarVersion = null;
+      return profileOf(s);
+    });
+    await (await avatarDoc()).delete().catch(() => undefined);
+    return { user };
+  },
+
+  async avatarImage() {
+    const snap = await (await avatarDoc()).get();
+    const image = snap.exists ? snap.data()?.image : undefined;
+    if (typeof image !== "string") throw new ApiError(404, "Kein Profilbild");
+    return image;
   },
 
   async segments() {

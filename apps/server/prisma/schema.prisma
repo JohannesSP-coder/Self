@@ -14,6 +14,11 @@ model User {
   name         String
   createdAt    DateTime @default(now())
 
+  /// Profile picture, a small square JPEG (see the web app's compressAvatar).
+  avatar          Bytes?
+  avatarMimeType  String?
+  avatarUpdatedAt DateTime?
+
   segments      Segment[]
   journalEntries JournalEntry[]
   urgeTrackers  UrgeTracker[]
