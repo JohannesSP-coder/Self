@@ -128,7 +128,7 @@ export function errorMessage(err: unknown): string {
 
 type AuthResponse = { token: string; user: User };
 
-export const api = {
+const httpApi = {
   login: (email: string, password: string) =>
     request<AuthResponse>("/auth/login", { method: "POST", body: { email, password } }),
   register: (name: string, email: string, password: string) =>
@@ -161,6 +161,16 @@ export const api = {
 
   coachConversation: () =>
     request<{ conversationId: string; messages: CoachMessage[] }>("/coach/conversation"),
-  sendCoachMessage: (message: string) =>
+  /** `onText` receives the whole reply so far where the backend can stream; the HTTP API cannot. */
+  sendCoachMessage: (message: string, _onText?: (text: string) => void) =>
     request<{ message: CoachMessage }>("/coach/message", { method: "POST", body: { message } }),
 };
+
+export type Api = typeof httpApi;
+
+export const api: Api = { ...httpApi };
+
+/** Swaps the data layer (the claude.ai demo stores data in the artifact instead of calling the server). */
+export function setBackend(impl: Api): void {
+  Object.assign(api, impl);
+}

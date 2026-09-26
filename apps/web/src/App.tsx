@@ -37,21 +37,28 @@ function PublicOnly({ children }: { children: ReactNode }) {
 export function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
-          <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
-          <Route element={<RequireAuth><Layout /></RequireAuth>}>
-            <Route index element={<HomePage />} />
-            <Route path="bereiche/:id" element={<SegmentPage />} />
-            <Route path="journal" element={<JournalPage />} />
-            <Route path="urges" element={<UrgesPage />} />
-            <Route path="urges/:id/blocker" element={<BlockerPage />} />
-            <Route path="coach" element={<CoachPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+      <AppRoutes />
     </BrowserRouter>
+  );
+}
+
+/** Everything except the router, so the claude.ai demo can mount it in a MemoryRouter. */
+export function AppRoutes() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+        <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
+        <Route element={<RequireAuth><Layout /></RequireAuth>}>
+          <Route index element={<HomePage />} />
+          <Route path="bereiche/:id" element={<SegmentPage />} />
+          <Route path="journal" element={<JournalPage />} />
+          <Route path="urges" element={<UrgesPage />} />
+          <Route path="urges/:id/blocker" element={<BlockerPage />} />
+          <Route path="coach" element={<CoachPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }

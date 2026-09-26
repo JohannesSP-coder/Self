@@ -661,6 +661,18 @@ button:disabled {
   text-align: center;
 }
 
+.demo-note {
+  margin: 20px auto 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;

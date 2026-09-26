@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { errorMessage } from "../api";
 import { useAuth } from "../auth";
 import { AnimeFigure } from "../components/AnimeFigure";
+import { IS_DEMO } from "../config";
 
 export function LoginPage() {
   const { login, register } = useAuth();
@@ -45,6 +46,13 @@ export function LoginPage() {
           </div>
         </div>
         <p className="auth-tagline">Für alle, die jeden Tag ein bisschen besser werden wollen.</p>
+
+        {IS_DEMO && (
+          <p className="demo-note">
+            Demo-Version: Deine Einträge werden privat in deinem claude.ai-Konto gespeichert. Ein Passwort wird hier
+            nicht geprüft.
+          </p>
+        )}
 
         <form className="auth-form" onSubmit={onSubmit}>
           {isRegister && (

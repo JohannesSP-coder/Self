@@ -17,6 +17,7 @@ export function CoachPage() {
   const [messages, setMessages] = useState<CoachMessage[] | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +36,7 @@ export function CoachPage() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, sending]);
+  }, [messages, sending, streamText]);
 
   async function send(text: string) {
     const message = text.trim();
@@ -51,7 +52,7 @@ export function CoachPage() {
     };
     setMessages((prev) => [...(prev ?? []), optimistic]);
     try {
-      const res = await api.sendCoachMessage(message);
+      const res = await api.sendCoachMessage(message, setStreamText);
       setMessages((prev) => [...(prev ?? []), res.message]);
     } catch (err) {
       setError(errorMessage(err));
@@ -60,6 +61,7 @@ export function CoachPage() {
       await load();
     } finally {
       setSending(false);
+      setStreamText("");
     }
   }
 
@@ -106,9 +108,13 @@ export function CoachPage() {
         ))}
         {sending && (
           <div className="bubble-row">
-            <div className="bubble typing" aria-label="Coach schreibt">
-              <span /><span /><span />
-            </div>
+            {streamText ? (
+              <div className="bubble">{renderText(streamText)}</div>
+            ) : (
+              <div className="bubble typing" aria-label="Coach schreibt">
+                <span /><span /><span />
+              </div>
+            )}
           </div>
         )}
         {error && <div className="error" role="alert">{error}</div>}
