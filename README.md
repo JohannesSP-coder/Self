@@ -34,6 +34,19 @@ Der Coach braucht einen Anthropic-API-Key (https://console.anthropic.com). Trag 
 `ANTHROPIC_API_KEY` ein und starte den Server neu. Ohne Key läuft alles andere normal, der Coach meldet dann
 "gerade nicht verfügbar". Jede Coach-Nachricht verursacht API-Kosten.
 
+### Push-Erinnerungen aktivieren
+
+Ohne weitere Einrichtung zeigt Meglio Erinnerungen als Banner in der App (funktioniert auch in der
+claude.ai-Demo). Für echte Push-Benachrichtigungen ein VAPID-Schlüsselpaar erzeugen und in
+`apps/server/.env` eintragen:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` und `VAPID_CONTACT_EMAIL` setzen, Server neu starten. Danach
+lässt sich der Schalter "Erinnerungen" auf `/profil` aktivieren.
+
 ## Funktionen der Website
 
 - Registrierung und Login; neue Nutzer sehen einmalig das Onboarding zu Fitness, Erholung und Schlaf
@@ -43,6 +56,8 @@ Der Coach braucht einen Anthropic-API-Key (https://console.anthropic.com). Trag 
 - Sucht-Tracker: Drang widerstanden, Rückfall (mit Bestätigung), Tracker anlegen
 - App-Blocker-Einstellungen pro Tracker: Zeitplan, Apps, Erwachsenen-Filter, eigene Webseiten, Wartezeit
 - Coach-Chat, der Bereiche, Streaks, Journal und Blocker-Versuche des Nutzers kennt
+- Erinnerungen: kurzer Hinweis auf Home, wenn nachmittags/abends/nachts noch ein Habit offen ist
+  (Sport, Mindset/Finanzen, Schlaf), optional auch als echte Push-Benachrichtigung
 
 Das eigentliche Sperren von Apps und Webseiten ist im Browser nicht möglich; es muss in einer nativen
 Handy-App umgesetzt werden (iOS Screen Time API mit Family-Controls-Berechtigung, unter Android Accessibility
