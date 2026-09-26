@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  segments      Segment[]
+  journalEntries JournalEntry[]
+  urgeTrackers  UrgeTracker[]
+  conversations CoachConversation[]
+}
+
+/// A life area the user defines for themselves, e.g. Fitness, Mindset, Finanzen.
+model Segment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  icon      String? // emoji or icon key chosen in the app
+  color     String? // hex color for UI theming
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  habits Habit[]
+
+  @@index([userId])
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  segmentId String
+  segment   Segment  @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String?
+  targetPerWeek Int  @default(7) // how many days per week the habit is meant to be done
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  logs HabitLog[]
+
+  @@index([segmentId])
+}
+
+/// One check-in for a habit on a given calendar day (date stored as YYYY-MM-DD).
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([habitId])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  body      String
+  mood      Int? // 1-5 self-reported mood scale
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Tracks a behavior the user wants to reduce/quit (e.g. addictions, urges).
+model UrgeTracker {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  streakStartAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  events UrgeEvent[]
+
+  @@index([userId])
+}
+
+/// A logged moment for an UrgeTracker: either a resisted urge or a relapse/reset.
+model UrgeEvent {
+  id            String      @id @default(cuid())
+  trackerId     String
+  tracker       UrgeTracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  type          String // "urge_resisted" | "relapse"
+  note          String?
+  createdAt     DateTime    @default(now())
+
+  @@index([trackerId])
+}
+
+model CoachConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String   @default("Coaching-Gespräch")
+  createdAt DateTime @default(now())
+
+  messages CoachMessage[]
+
+  @@index([userId])
+}
+
+model CoachMessage {
+  id             String            @id @default(cuid())
+  conversationId String
+  conversation   CoachConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // "user" | "assistant"
+  content        String
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId])
+}

@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# Expo
+apps/mobile/.expo/
+apps/mobile/dist/
+apps/mobile/web-build/
+apps/mobile/*.tsbuildinfo
+apps/mobile/ios/
+apps/mobile/android/
+
+# Prisma / SQLite
+apps/server/prisma/dev.db
+apps/server/prisma/dev.db-journal
+apps/server/dist/
+
+# macOS
+.DS_Store
